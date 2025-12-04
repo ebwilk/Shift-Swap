@@ -7,9 +7,7 @@
 
 <style>
     /* GLOBAL RESET & FONTS */
-    * {
-        box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
         font-family: "Ford Antenna", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -29,11 +27,10 @@
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         border-top: 6px solid #003478; /* Ford Trustmark Blue */
-        position: relative; /* Needed for the Toast positioning */
-        overflow: hidden;   /* Keeps the toast inside the rounded corners */
+        position: relative; 
+        overflow: hidden;   
     }
 
-    /* HEADER */
     h2 {
         margin: 0 0 4px 0;
         text-align: center;
@@ -50,7 +47,7 @@
         font-size: 14px;
     }
 
-    /* CALENDAR NAV */
+    /* NAV & WEEK DAYS */
     .nav-arrows {
         display: flex;
         justify-content: space-between;
@@ -87,7 +84,6 @@
         font-weight: 600;
     }
 
-    /* SUMMARY BAR */
     .summary {
         display: flex;
         justify-content: space-around;
@@ -101,7 +97,6 @@
         border: 1px solid #dae7ff;
     }
 
-    /* DAY & CARDS */
     .day-label {
         margin-top: 15px;
         margin-bottom: 8px;
@@ -112,24 +107,29 @@
         letter-spacing: 0.5px;
     }
 
+    /* SHIFT CARD STYLING */
     .shift-card {
         background: white;
         padding: 16px;
         border-radius: 6px;
         border: 1px solid #e0e0e0;
-        border-left: 5px solid #4a4a4a;
+        border-left: 5px solid #003478; /* Default to confirmed Blue */
         margin-bottom: 16px;
         position: relative;
         transition: all 0.3s ease;
     }
 
-    .status-confirmed { border-left-color: #003478; }
-    .status-pending-swap { border-left-color: #fca311; background-color: #fffdf5; }
+    /* Logic: If pending, we keep the blue border (it's still your shift) 
+       but change background slightly or add badge */
+    .shift-card.pending-state {
+        background-color: #fffdf5; /* Subtle yellow tint */
+        border-left-color: #fca311; /* Warning Yellow */
+    }
 
     .shift-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: start;
         margin-bottom: 8px;
     }
 
@@ -137,6 +137,23 @@
         font-size: 18px;
         font-weight: 700;
         color: #111;
+    }
+
+    /* BADGE FOR PENDING STATE */
+    .badge {
+        display: none; /* Hidden by default */
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 4px 8px;
+        border-radius: 12px;
+        background: #fca311;
+        color: #000;
+    }
+
+    /* Show badge when card has pending class */
+    .shift-card.pending-state .badge {
+        display: inline-block;
     }
 
     .shift-role {
@@ -164,32 +181,57 @@
         justify-content: space-between;
     }
 
+    /* DISCLAIMER TEXT (Only shows when pending) */
+    .responsibility-warning {
+        display: none;
+        font-size: 11px;
+        color: #d32f2f;
+        margin-top: 8px;
+        font-style: italic;
+    }
+    
+    .shift-card.pending-state .responsibility-warning {
+        display: block;
+    }
+
     /* BUTTONS */
-    .swap-btn {
+    .action-btn {
         margin-top: 12px;
         padding: 12px;
         font-size: 14px;
         font-weight: 600;
         border-radius: 4px;
-        background: white;
-        color: #003478;
-        border: 1px solid #003478;
         cursor: pointer;
         width: 100%;
         transition: all 0.2s;
     }
 
-    .swap-btn:hover {
+    /* Default Request Button */
+    .btn-request {
+        background: white;
+        color: #003478;
+        border: 1px solid #003478;
+    }
+    .btn-request:hover {
         background: #003478;
         color: white;
     }
 
-    .btn-disabled {
-        background: #e0e0e0 !important;
-        color: #777 !important;
-        border-color: #ccc !important;
-        cursor: not-allowed;
+    /* Cancel Button (replaces request button when pending) */
+    .btn-cancel {
+        display: none;
+        background: white;
+        color: #d32f2f;
+        border: 1px solid #d32f2f;
     }
+    .btn-cancel:hover {
+        background: #d32f2f;
+        color: white;
+    }
+
+    /* Toggle visibility based on state */
+    .shift-card.pending-state .btn-request { display: none; }
+    .shift-card.pending-state .btn-cancel { display: block; }
 
     /* MODAL */
     .modal {
@@ -212,12 +254,7 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
-    .close {
-        float: right;
-        cursor: pointer;
-        font-size: 24px;
-        color: #999;
-    }
+    .close { float: right; cursor: pointer; font-size: 24px; color: #999; }
     
     select {
         width: 100%;
@@ -241,16 +278,16 @@
         cursor: pointer;
     }
 
-    /* TOAST NOTIFICATION (The visual success message) */
+    /* TOAST NOTIFICATION */
     #toast {
-        visibility: hidden; /* Hidden by default */
+        visibility: hidden;
         min-width: 250px;
-        background-color: #2e7d32; /* Success Green */
+        background-color: #2e7d32;
         color: #fff;
         text-align: center;
         border-radius: 4px;
         padding: 16px;
-        position: absolute; /* Positions it relative to the .widget container */
+        position: absolute;
         z-index: 9999;
         left: 50%;
         bottom: 30px;
@@ -261,12 +298,13 @@
         opacity: 0;
         transition: opacity 0.5s, bottom 0.5s;
     }
-
-    /* Class to trigger the animation */
     #toast.show {
         visibility: visible;
         opacity: 1;
-        bottom: 50px; /* Slight slide-up effect */
+        bottom: 50px;
+    }
+    #toast.error {
+        background-color: #d32f2f; /* Red for cancel */
     }
 </style>
 </head>
@@ -299,9 +337,10 @@
     </div>
 
     <div class="day-label">Tue, Nov 25</div>
-    <div class="shift-card status-confirmed" id="card-1">
+    <div class="shift-card" id="card-1">
         <div class="shift-header">
             <div class="shift-time">06:00 – 16:30</div>
+            <span class="badge">Swap Pending</span>
         </div>
         <div class="shift-role">Trim Assembly - Station 14</div>
         <div class="shift-location">
@@ -311,13 +350,18 @@
             <span>Shift #1 (A Crew)</span>
             <span>10 hrs</span>
         </div>
-        <button class="swap-btn" onclick="openSwapModal(this, 'card-1', 'Tue, Nov 25 | 06:00 - 16:30')">Request Shift Swap</button>
+        <div class="responsibility-warning">
+            ⚠️ You are responsible for this shift until the swap is finalized.
+        </div>
+        <button class="action-btn btn-request" onclick="openSwapModal('card-1', 'Tue, Nov 25 | 06:00 - 16:30')">Request Shift Swap</button>
+        <button class="action-btn btn-cancel" onclick="cancelSwap('card-1')">Cancel Request</button>
     </div>
 
     <div class="day-label">Wed, Nov 26</div>
-    <div class="shift-card status-confirmed" id="card-2">
+    <div class="shift-card" id="card-2">
         <div class="shift-header">
             <div class="shift-time">06:00 – 16:30</div>
+            <span class="badge">Swap Pending</span>
         </div>
         <div class="shift-role">Chassis Marriage - Line 2</div>
         <div class="shift-location">
@@ -327,7 +371,32 @@
             <span>Shift #1 (A Crew)</span>
             <span>10 hrs</span>
         </div>
-        <button class="swap-btn" onclick="openSwapModal(this, 'card-2', 'Wed, Nov 26 | 06:00 - 16:30')">Request Shift Swap</button>
+        <div class="responsibility-warning">
+            ⚠️ You are responsible for this shift until the swap is finalized.
+        </div>
+        <button class="action-btn btn-request" onclick="openSwapModal('card-2', 'Wed, Nov 26 | 06:00 - 16:30')">Request Shift Swap</button>
+        <button class="action-btn btn-cancel" onclick="cancelSwap('card-2')">Cancel Request</button>
+    </div>
+
+    <div class="day-label">Thu, Nov 27</div>
+    <div class="shift-card" id="card-3">
+        <div class="shift-header">
+            <div class="shift-time">06:00 – 16:30</div>
+            <span class="badge">Swap Pending</span>
+        </div>
+        <div class="shift-role">Quality Inspection - EOL</div>
+        <div class="shift-location">
+            <span>📍 Final Bay, Dearborn Truck Plant</span>
+        </div>
+        <div class="shift-meta">
+            <span>Shift #1 (A Crew)</span>
+            <span>10 hrs</span>
+        </div>
+        <div class="responsibility-warning">
+            ⚠️ You are responsible for this shift until the swap is finalized.
+        </div>
+        <button class="action-btn btn-request" onclick="openSwapModal('card-3', 'Thu, Nov 27 | 06:00 - 16:30')">Request Shift Swap</button>
+        <button class="action-btn btn-cancel" onclick="cancelSwap('card-3')">Cancel Request</button>
     </div>
 
     <div id="toast">Request Sent Successfully!</div>
@@ -357,15 +426,29 @@
 </div>
 
 <script>
-let activeBtn = null;      
+/* LOGIC:
+   1. On Load: Check localStorage to see if any cards were previously "swapped".
+   2. Render the "Pending" state if true.
+   3. On Request: Save ID to localStorage, update UI, show Toast.
+   4. On Cancel: Remove ID from localStorage, revert UI.
+*/
+
 let activeCardId = null;   
 let chosenShiftName = "";
 
-function openSwapModal(btnElement, cardId, shiftName) {
-    activeBtn = btnElement;
+// 1. Initialize State from LocalStorage
+window.onload = function() {
+    const cards = ['card-1', 'card-2', 'card-3'];
+    cards.forEach(id => {
+        if (localStorage.getItem(id) === 'pending') {
+            document.getElementById(id).classList.add('pending-state');
+        }
+    });
+};
+
+function openSwapModal(cardId, shiftName) {
     activeCardId = cardId;
     chosenShiftName = shiftName;
-    
     document.getElementById("selectedShiftText").innerText = shiftName;
     document.getElementById("swapModal").style.display = "flex";
 }
@@ -374,7 +457,6 @@ function closeSwapModal() {
     document.getElementById("swapModal").style.display = "none";
 }
 
-// Close if clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById("swapModal");
     if (event.target == modal) {
@@ -382,40 +464,35 @@ window.onclick = function(event) {
     }
 }
 
-// Function to trigger the visual Toast
-function showToast(message) {
+function showToast(message, type = 'success') {
     const toast = document.getElementById("toast");
-    toast.innerText = message; // Set dynamic text
-    toast.className = "show";
+    toast.innerText = message;
     
-    // Hide it after 3 seconds
+    // Reset classes
+    toast.className = "show";
+    if(type === 'error') toast.classList.add("error");
+    
     setTimeout(function(){ 
         toast.className = toast.className.replace("show", ""); 
     }, 3000);
 }
 
+// 2. Action: Send Request
 async function sendSwapRequest() {
     const colleague = document.getElementById("colleague").value;
-
     closeSwapModal();
 
-    // 1. UPDATE CARD UI
-    if (activeBtn) {
-        activeBtn.innerHTML = "Request Pending...";
-        activeBtn.classList.add("btn-disabled");
-        activeBtn.disabled = true;
-        
-        const card = document.getElementById(activeCardId);
-        if(card) {
-            card.classList.remove("status-confirmed");
-            card.classList.add("status-pending-swap");
-        }
+    // Update UI
+    const card = document.getElementById(activeCardId);
+    if(card) {
+        card.classList.add("pending-state");
+        // Save to LocalStorage so it persists on reload
+        localStorage.setItem(activeCardId, 'pending');
     }
 
-    // 2. SHOW VISUAL SUCCESS MESSAGE (The Fix)
     showToast(`Request sent to ${colleague}`);
 
-    // 3. SEND API CALL (Background)
+    // Mock API Call
     const payload = {
         "accessorIds": ["692f4f895645392f2317a142"], 
         "channels": ["notificationCenter", "push"],
@@ -425,16 +502,8 @@ async function sendSwapRequest() {
         },
         "icon": { "en_US": {"type":"font","char":""}, "de_DE": {"type":"font","char":""} },
         "image": {
-            "en_US": {
-                "type":"image",
-                "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg",
-                "width":600,"height":400
-            },
-            "de_DE": {
-                "type":"image",
-                "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg",
-                "width":600,"height":400
-            }
+            "en_US": { "type":"image", "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg", "width":600,"height":400 },
+            "de_DE": { "type":"image", "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg", "width":600,"height":400 }
         },
         "link":"https://app.staffbase.com/content/page/6914e3ecd5cde774c74364f1"
     };
@@ -450,6 +519,17 @@ async function sendSwapRequest() {
         });
     } catch (e) {
         console.error("Mock API error:", e);
+    }
+}
+
+// 3. Action: Cancel Request
+function cancelSwap(cardId) {
+    const card = document.getElementById(cardId);
+    if(card) {
+        card.classList.remove("pending-state");
+        // Remove from storage
+        localStorage.removeItem(cardId);
+        showToast("Request Cancelled", "error");
     }
 }
 </script>
