@@ -12,23 +12,25 @@
     body {
         font-family: "Ford Antenna", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #f0f2f5;
-        padding: 20px;
+        padding: 20px; /* Outer padding */
         margin: 0;
-        display: flex;
-        justify-content: center;
+        /* Ensure the body can scroll if needed */
+        min-height: 100vh;
     }
 
     /* WIDGET CONTAINER */
     .widget {
         width: 100%;
         max-width: 480px;
+        margin: 0 auto; /* Center it */
         background: #ffffff;
         border-radius: 8px;
-        padding: 20px;
+        padding: 16px; /* Slightly reduced padding */
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         border-top: 6px solid #003478; /* Ford Trustmark Blue */
-        position: relative; 
-        overflow: hidden;   
+        
+        /* FIX: Removed 'overflow: hidden' so the 3rd card isn't cut off */
+        overflow: visible; 
     }
 
     h2 {
@@ -42,7 +44,7 @@
     .date-range {
         text-align: center;
         font-weight: 500;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         color: #555;
         font-size: 14px;
     }
@@ -51,7 +53,7 @@
     .nav-arrows {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         font-size: 18px;
         padding: 0 8px;
         color: #003478;
@@ -63,7 +65,7 @@
         display: flex;
         justify-content: space-between;
         gap: 4px;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         font-size: 12px;
         color: #666;
     }
@@ -71,7 +73,7 @@
     .week-days div {
         flex: 1;
         text-align: center;
-        padding: 10px 0;
+        padding: 8px 0;
         border-radius: 4px;
         background: #f9f9f9;
         cursor: pointer;
@@ -88,9 +90,9 @@
         display: flex;
         justify-content: space-around;
         background: #eef4ff;
-        padding: 12px;
+        padding: 10px;
         border-radius: 6px;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         font-size: 14px;
         font-weight: 600;
         color: #003478;
@@ -98,11 +100,11 @@
     }
 
     .day-label {
-        margin-top: 15px;
-        margin-bottom: 8px;
+        margin-top: 12px;
+        margin-bottom: 6px;
         font-weight: 700;
         color: #333;
-        font-size: 14px;
+        font-size: 13px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -110,48 +112,45 @@
     /* SHIFT CARD STYLING */
     .shift-card {
         background: white;
-        padding: 16px;
+        padding: 14px; /* More compact */
         border-radius: 6px;
         border: 1px solid #e0e0e0;
-        border-left: 5px solid #003478; /* Default to confirmed Blue */
-        margin-bottom: 16px;
+        border-left: 5px solid #003478;
+        margin-bottom: 12px; /* Less gap between cards */
         position: relative;
         transition: all 0.3s ease;
     }
 
-    /* Logic: If pending, we keep the blue border (it's still your shift) 
-       but change background slightly or add badge */
     .shift-card.pending-state {
-        background-color: #fffdf5; /* Subtle yellow tint */
-        border-left-color: #fca311; /* Warning Yellow */
+        background-color: #fffdf5;
+        border-left-color: #fca311;
     }
 
     .shift-header {
         display: flex;
         justify-content: space-between;
         align-items: start;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .shift-time {
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 700;
         color: #111;
     }
 
     /* BADGE FOR PENDING STATE */
     .badge {
-        display: none; /* Hidden by default */
-        font-size: 11px;
+        display: none;
+        font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
-        padding: 4px 8px;
+        padding: 3px 6px;
         border-radius: 12px;
         background: #fca311;
         color: #000;
     }
 
-    /* Show badge when card has pending class */
     .shift-card.pending-state .badge {
         display: inline-block;
     }
@@ -181,7 +180,6 @@
         justify-content: space-between;
     }
 
-    /* DISCLAIMER TEXT (Only shows when pending) */
     .responsibility-warning {
         display: none;
         font-size: 11px;
@@ -196,8 +194,8 @@
 
     /* BUTTONS */
     .action-btn {
-        margin-top: 12px;
-        padding: 12px;
+        margin-top: 10px;
+        padding: 10px;
         font-size: 14px;
         font-weight: 600;
         border-radius: 4px;
@@ -206,7 +204,6 @@
         transition: all 0.2s;
     }
 
-    /* Default Request Button */
     .btn-request {
         background: white;
         color: #003478;
@@ -217,7 +214,6 @@
         color: white;
     }
 
-    /* Cancel Button (replaces request button when pending) */
     .btn-cancel {
         display: none;
         background: white;
@@ -229,7 +225,6 @@
         color: white;
     }
 
-    /* Toggle visibility based on state */
     .shift-card.pending-state .btn-request { display: none; }
     .shift-card.pending-state .btn-cancel { display: block; }
 
@@ -278,7 +273,8 @@
         cursor: pointer;
     }
 
-    /* TOAST NOTIFICATION */
+    /* TOAST NOTIFICATION - FIXED POSITION */
+    /* Changed position to 'fixed' so it floats over the screen regardless of scrolling */
     #toast {
         visibility: hidden;
         min-width: 250px;
@@ -287,24 +283,27 @@
         text-align: center;
         border-radius: 4px;
         padding: 16px;
-        position: absolute;
-        z-index: 9999;
+        
+        position: fixed; /* Stick to viewport */
         left: 50%;
         bottom: 30px;
         transform: translateX(-50%);
+        z-index: 9999;
+        
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         font-size: 15px;
         font-weight: 600;
         opacity: 0;
         transition: opacity 0.5s, bottom 0.5s;
     }
+    
     #toast.show {
         visibility: visible;
         opacity: 1;
         bottom: 50px;
     }
     #toast.error {
-        background-color: #d32f2f; /* Red for cancel */
+        background-color: #d32f2f;
     }
 </style>
 </head>
@@ -399,9 +398,9 @@
         <button class="action-btn btn-cancel" onclick="cancelSwap('card-3')">Cancel Request</button>
     </div>
 
-    <div id="toast">Request Sent Successfully!</div>
-
 </div>
+
+<div id="toast">Request Sent Successfully!</div>
 
 <div id="swapModal" class="modal">
     <div class="modal-content">
@@ -426,13 +425,6 @@
 </div>
 
 <script>
-/* LOGIC:
-   1. On Load: Check localStorage to see if any cards were previously "swapped".
-   2. Render the "Pending" state if true.
-   3. On Request: Save ID to localStorage, update UI, show Toast.
-   4. On Cancel: Remove ID from localStorage, revert UI.
-*/
-
 let activeCardId = null;   
 let chosenShiftName = "";
 
@@ -486,13 +478,11 @@ async function sendSwapRequest() {
     const card = document.getElementById(activeCardId);
     if(card) {
         card.classList.add("pending-state");
-        // Save to LocalStorage so it persists on reload
         localStorage.setItem(activeCardId, 'pending');
     }
 
     showToast(`Request sent to ${colleague}`);
 
-    // Mock API Call
     const payload = {
         "accessorIds": ["692f4f895645392f2317a142"], 
         "channels": ["notificationCenter", "push"],
@@ -527,7 +517,6 @@ function cancelSwap(cardId) {
     const card = document.getElementById(cardId);
     if(card) {
         card.classList.remove("pending-state");
-        // Remove from storage
         localStorage.removeItem(cardId);
         showToast("Request Cancelled", "error");
     }
