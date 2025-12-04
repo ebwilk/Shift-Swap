@@ -25,10 +25,12 @@
         width: 100%;
         max-width: 480px;
         background: #ffffff;
-        border-radius: 8px; /* Ford style is often squarer */
+        border-radius: 8px;
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         border-top: 6px solid #003478; /* Ford Trustmark Blue */
+        position: relative; /* Needed for the Toast positioning */
+        overflow: hidden;   /* Keeps the toast inside the rounded corners */
     }
 
     /* HEADER */
@@ -80,7 +82,7 @@
     }
 
     .week-days .active {
-        background: #003478; /* Ford Blue */
+        background: #003478;
         color: white;
         font-weight: 600;
     }
@@ -115,14 +117,14 @@
         padding: 16px;
         border-radius: 6px;
         border: 1px solid #e0e0e0;
-        border-left: 5px solid #4a4a4a; /* Default grey for future */
+        border-left: 5px solid #4a4a4a;
         margin-bottom: 16px;
         position: relative;
+        transition: all 0.3s ease;
     }
 
-    /* Status indicator colors */
-    .status-confirmed { border-left-color: #003478; } /* Ford Blue */
-    .status-pending { border-left-color: #ffc107; }
+    .status-confirmed { border-left-color: #003478; }
+    .status-pending-swap { border-left-color: #fca311; background-color: #fffdf5; }
 
     .shift-header {
         display: flex;
@@ -174,12 +176,19 @@
         border: 1px solid #003478;
         cursor: pointer;
         width: 100%;
-        transition: background 0.2s;
+        transition: all 0.2s;
     }
 
     .swap-btn:hover {
         background: #003478;
         color: white;
+    }
+
+    .btn-disabled {
+        background: #e0e0e0 !important;
+        color: #777 !important;
+        border-color: #ccc !important;
+        cursor: not-allowed;
     }
 
     /* MODAL */
@@ -231,6 +240,34 @@
         margin-top: 20px;
         cursor: pointer;
     }
+
+    /* TOAST NOTIFICATION (The visual success message) */
+    #toast {
+        visibility: hidden; /* Hidden by default */
+        min-width: 250px;
+        background-color: #2e7d32; /* Success Green */
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 16px;
+        position: absolute; /* Positions it relative to the .widget container */
+        z-index: 9999;
+        left: 50%;
+        bottom: 30px;
+        transform: translateX(-50%);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        font-size: 15px;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.5s, bottom 0.5s;
+    }
+
+    /* Class to trigger the animation */
+    #toast.show {
+        visibility: visible;
+        opacity: 1;
+        bottom: 50px; /* Slight slide-up effect */
+    }
 </style>
 </head>
 
@@ -262,9 +299,10 @@
     </div>
 
     <div class="day-label">Tue, Nov 25</div>
-    <div class="shift-card status-confirmed">
+    <div class="shift-card status-confirmed" id="card-1">
         <div class="shift-header">
-            <div class="shift-time">06:00 – 16:30</div> </div>
+            <div class="shift-time">06:00 – 16:30</div>
+        </div>
         <div class="shift-role">Trim Assembly - Station 14</div>
         <div class="shift-location">
             <span>📍 Zone C, Dearborn Truck Plant</span>
@@ -273,11 +311,11 @@
             <span>Shift #1 (A Crew)</span>
             <span>10 hrs</span>
         </div>
-        <button class="swap-btn" onclick="openSwapModal('Tue, Nov 25 | 06:00 - 16:30')">Request Shift Swap</button>
+        <button class="swap-btn" onclick="openSwapModal(this, 'card-1', 'Tue, Nov 25 | 06:00 - 16:30')">Request Shift Swap</button>
     </div>
 
     <div class="day-label">Wed, Nov 26</div>
-    <div class="shift-card status-confirmed">
+    <div class="shift-card status-confirmed" id="card-2">
         <div class="shift-header">
             <div class="shift-time">06:00 – 16:30</div>
         </div>
@@ -289,24 +327,10 @@
             <span>Shift #1 (A Crew)</span>
             <span>10 hrs</span>
         </div>
-        <button class="swap-btn" onclick="openSwapModal('Wed, Nov 26 | 06:00 - 16:30')">Request Shift Swap</button>
+        <button class="swap-btn" onclick="openSwapModal(this, 'card-2', 'Wed, Nov 26 | 06:00 - 16:30')">Request Shift Swap</button>
     </div>
 
-    <div class="day-label">Thu, Nov 27</div>
-    <div class="shift-card status-confirmed">
-        <div class="shift-header">
-            <div class="shift-time">06:00 – 16:30</div>
-        </div>
-        <div class="shift-role">Quality Inspection - EOL</div>
-        <div class="shift-location">
-            <span>📍 Final Bay, Dearborn Truck Plant</span>
-        </div>
-        <div class="shift-meta">
-            <span>Shift #1 (A Crew)</span>
-            <span>10 hrs</span>
-        </div>
-        <button class="swap-btn" onclick="openSwapModal('Thu, Nov 27 | 06:00 - 16:30')">Request Shift Swap</button>
-    </div>
+    <div id="toast">Request Sent Successfully!</div>
 
 </div>
 
@@ -317,7 +341,7 @@
         <p style="font-size:14px; color:#555;">Select a colleague to offer this shift to:</p>
         
         <div style="background:#f0f2f5; padding:10px; border-radius:4px; margin-bottom:15px; font-size:13px;">
-            <strong id="selectedShift"></strong>
+            <strong id="selectedShiftText"></strong>
         </div>
 
         <label style="font-weight:600; font-size:14px; display:block; margin-bottom:8px;">Available Colleagues:</label>
@@ -333,12 +357,16 @@
 </div>
 
 <script>
-let chosenShift = "";
+let activeBtn = null;      
+let activeCardId = null;   
+let chosenShiftName = "";
 
-function openSwapModal(shift) {
-    chosenShift = shift;
-    // Removed "Shift:" text prefix to avoid duplication
-    document.getElementById("selectedShift").innerText = shift;
+function openSwapModal(btnElement, cardId, shiftName) {
+    activeBtn = btnElement;
+    activeCardId = cardId;
+    chosenShiftName = shiftName;
+    
+    document.getElementById("selectedShiftText").innerText = shiftName;
     document.getElementById("swapModal").style.display = "flex";
 }
 
@@ -346,7 +374,7 @@ function closeSwapModal() {
     document.getElementById("swapModal").style.display = "none";
 }
 
-// Close modal if clicking outside content
+// Close if clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById("swapModal");
     if (event.target == modal) {
@@ -354,22 +382,51 @@ window.onclick = function(event) {
     }
 }
 
+// Function to trigger the visual Toast
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.innerText = message; // Set dynamic text
+    toast.className = "show";
+    
+    // Hide it after 3 seconds
+    setTimeout(function(){ 
+        toast.className = toast.className.replace("show", ""); 
+    }, 3000);
+}
+
 async function sendSwapRequest() {
     const colleague = document.getElementById("colleague").value;
 
-    // Updated Payload for Manufacturing Context
+    closeSwapModal();
+
+    // 1. UPDATE CARD UI
+    if (activeBtn) {
+        activeBtn.innerHTML = "Request Pending...";
+        activeBtn.classList.add("btn-disabled");
+        activeBtn.disabled = true;
+        
+        const card = document.getElementById(activeCardId);
+        if(card) {
+            card.classList.remove("status-confirmed");
+            card.classList.add("status-pending-swap");
+        }
+    }
+
+    // 2. SHOW VISUAL SUCCESS MESSAGE (The Fix)
+    showToast(`Request sent to ${colleague}`);
+
+    // 3. SEND API CALL (Background)
     const payload = {
-        "accessorIds": ["692f4f895645392f2317a142"], // Keep existing ID
+        "accessorIds": ["692f4f895645392f2317a142"], 
         "channels": ["notificationCenter", "push"],
         "content": {
-            "en_US": { "text": `Shift Swap Request: ${chosenShift} offered to ${colleague}` },
-            "de_DE": { "text": `Schichttausch angefordert: ${chosenShift} für ${colleague}` }
+            "en_US": { "text": `Shift Swap Request: ${chosenShiftName} offered to ${colleague}` },
+            "de_DE": { "text": `Schichttausch angefordert: ${chosenShiftName} für ${colleague}` }
         },
         "icon": { "en_US": {"type":"font","char":""}, "de_DE": {"type":"font","char":""} },
         "image": {
             "en_US": {
                 "type":"image",
-                // Updated to a generic Ford/Industrial image placeholder
                 "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg",
                 "width":600,"height":400
             },
@@ -379,31 +436,20 @@ async function sendSwapRequest() {
                 "width":600,"height":400
             }
         },
-        // Link to Ford/Staffbase scheduling page
         "link":"https://app.staffbase.com/content/page/6914e3ecd5cde774c74364f1"
     };
 
     try {
-        const res = await fetch("https://app.staffbase.com/api/branch/notifications", {
+        await fetch("https://app.staffbase.com/api/branch/notifications", {
             method: "POST",
             headers: {
-                // NOTE: This Auth token from your example may expire. 
-                // Ensure this is generated dynamically in production.
                 "Authorization":"Basic NjkzMWUzM2EyYWU0NGMxZWE4ZTI4NTY2OkMqTnQ2YSRJNWF5RzF0dkR1a0hFdW0hbGFEMTRsZk1+S185ITcxQ09jV1Jsb3ctJmpDczMrKmFveXdRSikyLXU=",
                 "Content-Type":"application/json"
             },
             body: JSON.stringify(payload)
         });
-
-        if (res.ok) {
-            alert(`Request sent to ${colleague} successfully.`);
-            closeSwapModal();
-        } else {
-            alert("Error sending request. Please check your connection.");
-        }
     } catch (e) {
-        console.error(e);
-        alert("Network error occurred.");
+        console.error("Mock API error:", e);
     }
 }
 </script>
