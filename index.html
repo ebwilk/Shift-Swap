@@ -249,7 +249,7 @@ async function sendSwapRequest() {
     const colleague = document.getElementById("colleague").value;
 
     const payload = {
-        "accessorIds": ["6914bfac955bde56d791c4ee"],
+        "accessorIds": ["692f4f895645392f2317a142"],
         "channels": ["notificationCenter", "push"],
         "content": {
             "en_US": { "text": `New Shift Swap Requested: ${chosenShift} → ${colleague}` },
@@ -275,7 +275,7 @@ async function sendSwapRequest() {
         const res = await fetch("https://app.staffbase.com/api/branch/notifications", {
             method: "POST",
             headers: {
-                "Authorization":"Basic NjkxNGM3MzA0ZWE3Y2E1NmE2MDhjOGU2Ol0ta0t3KmU2b3phVG4zeG9SK2NoQVt7KnNeTHsmIXtrSSY5TCZze3AqeWssdDJELi1Rel1PYzJ7dGx0N0h+QjQ=",
+                "Authorization":"Basic NjkzMWUzM2EyYWU0NGMxZWE4ZTI4NTY2OkMqTnQ2YSRJNWF5RzF0dkR1a0hFdW0hbGFEMTRsZk1+S185ITcxQ09jV1Jsb3ctJmpDczMrKmFveXdRSikyLXU=",
                 "Content-Type":"application/json"
             },
             body: JSON.stringify(payload)
