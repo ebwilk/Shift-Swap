@@ -3,157 +3,233 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Shift Overview</title>
+<title>Ford Shift Scheduler</title>
 
 <style>
-    /* GLOBAL FIX — prevents overflow in Staffbase containers */
+    /* GLOBAL RESET & FONTS */
     * {
         box-sizing: border-box;
     }
 
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: #f6f7f8;
-        padding: 0;
+        font-family: "Ford Antenna", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
         margin: 0;
+        display: flex;
+        justify-content: center;
     }
 
+    /* WIDGET CONTAINER */
     .widget {
         width: 100%;
         max-width: 480px;
-        margin: auto;
         background: #ffffff;
-        border-radius: 14px;
-        padding: 16px;
+        border-radius: 8px; /* Ford style is often squarer */
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-top: 6px solid #003478; /* Ford Trustmark Blue */
+    }
+
+    /* HEADER */
+    h2 {
+        margin: 0 0 4px 0;
+        text-align: center;
+        color: #003478;
+        font-weight: 700;
+        letter-spacing: -0.5px;
     }
 
     .date-range {
         text-align: center;
-        font-weight: 600;
-        margin-bottom: 12px;
-        color: #333;
-        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        color: #555;
+        font-size: 14px;
     }
 
+    /* CALENDAR NAV */
     .nav-arrows {
         display: flex;
         justify-content: space-between;
         margin-bottom: 10px;
-        font-size: 20px;
-        padding: 0 4px;
-        color: #444;
+        font-size: 18px;
+        padding: 0 8px;
+        color: #003478;
+        font-weight: bold;
+        cursor: pointer;
     }
 
     .week-days {
         display: flex;
         justify-content: space-between;
-        padding: 0 4px;
-        margin-bottom: 12px;
-        font-size: 13px;
-        color: #777;
+        gap: 4px;
+        margin-bottom: 20px;
+        font-size: 12px;
+        color: #666;
     }
 
     .week-days div {
-        width: 100%;
+        flex: 1;
         text-align: center;
-        padding: 8px 0;
-        border-radius: 10px;
+        padding: 10px 0;
+        border-radius: 4px;
+        background: #f9f9f9;
         cursor: pointer;
+        transition: all 0.2s;
     }
 
     .week-days .active {
-        background: #005eb8;
+        background: #003478; /* Ford Blue */
         color: white;
         font-weight: 600;
     }
 
+    /* SUMMARY BAR */
     .summary {
-        text-align: center;
+        display: flex;
+        justify-content: space-around;
+        background: #eef4ff;
+        padding: 12px;
+        border-radius: 6px;
         margin-bottom: 20px;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
-        color: #444;
+        color: #003478;
+        border: 1px solid #dae7ff;
     }
 
-    /* Day label */
+    /* DAY & CARDS */
     .day-label {
-        margin-top: 20px;
+        margin-top: 15px;
         margin-bottom: 8px;
-        font-weight: 600;
-        color: #444;
-        font-size: 15px;
-        padding-left: 4px;
+        font-weight: 700;
+        color: #333;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .shift-card {
-        width: 100%;
         background: white;
-        padding: 14px;
-        border-radius: 12px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        border-left: 4px solid #5c4cff;
+        padding: 16px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        border-left: 5px solid #4a4a4a; /* Default grey for future */
         margin-bottom: 16px;
+        position: relative;
+    }
+
+    /* Status indicator colors */
+    .status-confirmed { border-left-color: #003478; } /* Ford Blue */
+    .status-pending { border-left-color: #ffc107; }
+
+    .shift-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
     }
 
     .shift-time {
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 700;
-        margin-bottom: 6px;
+        color: #111;
     }
 
-    .shift-details {
+    .shift-role {
         font-size: 14px;
+        font-weight: 600;
+        color: #003478;
+        margin-bottom: 4px;
+    }
+
+    .shift-location {
+        font-size: 13px;
         color: #555;
-        margin-bottom: 3px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .shift-meta {
-        text-align: right;
-        font-size: 13px;
+        font-size: 12px;
         color: #777;
-        margin-top: 6px;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
     }
 
-    /* ========== Larger button (30% bigger) ========== */
+    /* BUTTONS */
     .swap-btn {
-        margin-top: 10px;
-        padding: 12px 14px;              /* Increased */
-        font-size: 15px;                 /* Increased */
-        border-radius: 8px;              /* Slightly larger */
-        background: #005eb8;
-        color: white;
-        border: none;
+        margin-top: 12px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 4px;
+        background: white;
+        color: #003478;
+        border: 1px solid #003478;
         cursor: pointer;
-        width: 100%;                     /* Full width for touch devices */
+        width: 100%;
+        transition: background 0.2s;
     }
 
     .swap-btn:hover {
-        background: #00468a;
+        background: #003478;
+        color: white;
     }
 
-    /* Modal */
+    /* MODAL */
     .modal {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.4);
+        background: rgba(0,0,0,0.6);
         justify-content: center;
         align-items: center;
         padding: 20px;
+        z-index: 1000;
     }
 
     .modal-content {
         background: white;
-        padding: 20px;
+        padding: 24px;
         width: 100%;
-        max-width: 360px;
-        border-radius: 12px;
+        max-width: 380px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     }
 
     .close {
         float: right;
         cursor: pointer;
-        font-size: 22px;
+        font-size: 24px;
+        color: #999;
+    }
+    
+    select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        background: #fff;
+    }
+
+    .modal-btn {
+        background: #003478;
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 4px;
+        margin-top: 20px;
+        cursor: pointer;
     }
 </style>
 </head>
@@ -162,13 +238,12 @@
 
 <div class="widget">
 
-    <h2 style="margin-bottom: 2px; text-align:center;">Shift Overview</h2>
-
+    <h2>My Schedule</h2>
     <div class="date-range">Nov 24 – Nov 30, 2025</div>
 
     <div class="nav-arrows">
-        <span>&lt;</span>
-        <span>&gt;</span>
+        <span>&lsaquo; Prev</span>
+        <span>Next &rsaquo;</span>
     </div>
 
     <div class="week-days">
@@ -181,54 +256,79 @@
         <div>Su<br>30</div>
     </div>
 
-    <div class="summary">30 hrs / $285</div>
-
-    <!-- Example days/shifts -->
-    <div class="day-label">Tue, Oct 22</div>
-    <div class="shift-card">
-        <div class="shift-time">6am – 4pm</div>
-        <div class="shift-details">Hospitalist</div>
-        <div class="shift-details">Medical City Arlington</div>
-        <div class="shift-meta">10 hrs</div>
-        <button class="swap-btn" onclick="openSwapModal('10am – 5:30pm')">Request Swap</button>
+    <div class="summary">
+        <span>Est. Pay: $920</span>
+        <span>Hours: 30.0</span>
     </div>
 
-    <div class="day-label">Wed, Oct 23</div>
-    <div class="shift-card">
-        <div class="shift-time">7pm – 7am</div>
-        <div class="shift-details">Emergency Physician</div>
-        <div class="shift-details">Charlton Medical Center</div>
-        <div class="shift-meta">12 hrs</div>
-        <button class="swap-btn" onclick="openSwapModal('10am – 5:30pm')">Request Swap</button>
+    <div class="day-label">Tue, Nov 25</div>
+    <div class="shift-card status-confirmed">
+        <div class="shift-header">
+            <div class="shift-time">06:00 – 16:30</div> </div>
+        <div class="shift-role">Trim Assembly - Station 14</div>
+        <div class="shift-location">
+            <span>📍 Zone C, Dearborn Truck Plant</span>
+        </div>
+        <div class="shift-meta">
+            <span>Shift #1 (A Crew)</span>
+            <span>10 hrs</span>
+        </div>
+        <button class="swap-btn" onclick="openSwapModal('Tue, Nov 25 | 06:00 - 16:30')">Request Shift Swap</button>
     </div>
 
-    <div class="day-label">Thu, Oct 24</div>
-    <div class="shift-card">
-        <div class="shift-time">11am – 9pm</div>
-        <div class="shift-details">Physician Assistant</div>
-        <div class="shift-details">Baylor Scott & White</div>
-        <div class="shift-meta">10 hrs</div>
-        <button class="swap-btn" onclick="openSwapModal('10am – 5:30pm')">Request Swap</button>
+    <div class="day-label">Wed, Nov 26</div>
+    <div class="shift-card status-confirmed">
+        <div class="shift-header">
+            <div class="shift-time">06:00 – 16:30</div>
+        </div>
+        <div class="shift-role">Chassis Marriage - Line 2</div>
+        <div class="shift-location">
+            <span>📍 Zone B, Dearborn Truck Plant</span>
+        </div>
+        <div class="shift-meta">
+            <span>Shift #1 (A Crew)</span>
+            <span>10 hrs</span>
+        </div>
+        <button class="swap-btn" onclick="openSwapModal('Wed, Nov 26 | 06:00 - 16:30')">Request Shift Swap</button>
+    </div>
+
+    <div class="day-label">Thu, Nov 27</div>
+    <div class="shift-card status-confirmed">
+        <div class="shift-header">
+            <div class="shift-time">06:00 – 16:30</div>
+        </div>
+        <div class="shift-role">Quality Inspection - EOL</div>
+        <div class="shift-location">
+            <span>📍 Final Bay, Dearborn Truck Plant</span>
+        </div>
+        <div class="shift-meta">
+            <span>Shift #1 (A Crew)</span>
+            <span>10 hrs</span>
+        </div>
+        <button class="swap-btn" onclick="openSwapModal('Thu, Nov 27 | 06:00 - 16:30')">Request Shift Swap</button>
     </div>
 
 </div>
 
-<!-- Modal -->
 <div id="swapModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeSwapModal()">&times;</span>
-        <h3>Request Shift Swap</h3>
-        <p id="selectedShift"></p>
+        <h3 style="color:#003478; margin-top:0;">Swap Request</h3>
+        <p style="font-size:14px; color:#555;">Select a colleague to offer this shift to:</p>
+        
+        <div style="background:#f0f2f5; padding:10px; border-radius:4px; margin-bottom:15px; font-size:13px;">
+            <strong id="selectedShift"></strong>
+        </div>
 
-        <label><strong>Swap with colleague:</strong></label><br><br>
-        <select id="colleague" style="width:100%;padding:10px;border-radius:6px;font-size:15px;">
-            <option value="Dr. Smith">Dr. Smith</option>
-            <option value="Dr. Perez">Dr. Perez</option>
-            <option value="Dr. Lee">Dr. Lee</option>
+        <label style="font-weight:600; font-size:14px; display:block; margin-bottom:8px;">Available Colleagues:</label>
+        <select id="colleague">
+            <option value="J. Miller (Line 2)">J. Miller (Line 2)</option>
+            <option value="K. Davis (Trim A)">K. Davis (Trim A)</option>
+            <option value="R. Sanchez (Floater)">R. Sanchez (Floater)</option>
+            <option value="T. Wilson (Zone C)">T. Wilson (Zone C)</option>
         </select>
 
-        <br><br>
-        <button class="swap-btn" onclick="sendSwapRequest()">Send Request</button>
+        <button class="modal-btn" onclick="sendSwapRequest()">Send Request</button>
     </div>
 </div>
 
@@ -237,7 +337,8 @@ let chosenShift = "";
 
 function openSwapModal(shift) {
     chosenShift = shift;
-    document.getElementById("selectedShift").innerHTML = "<strong>Shift:</strong> " + shift;
+    // Removed "Shift:" text prefix to avoid duplication
+    document.getElementById("selectedShift").innerText = shift;
     document.getElementById("swapModal").style.display = "flex";
 }
 
@@ -245,29 +346,40 @@ function closeSwapModal() {
     document.getElementById("swapModal").style.display = "none";
 }
 
+// Close modal if clicking outside content
+window.onclick = function(event) {
+    const modal = document.getElementById("swapModal");
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+
 async function sendSwapRequest() {
     const colleague = document.getElementById("colleague").value;
 
+    // Updated Payload for Manufacturing Context
     const payload = {
-        "accessorIds": ["692f4f895645392f2317a142"],
+        "accessorIds": ["692f4f895645392f2317a142"], // Keep existing ID
         "channels": ["notificationCenter", "push"],
         "content": {
-            "en_US": { "text": `New Shift Swap Requested: ${chosenShift} → ${colleague}` },
-            "de_DE": { "text": `New Shift Swap Requested: ${chosenShift} → ${colleague}` }
+            "en_US": { "text": `Shift Swap Request: ${chosenShift} offered to ${colleague}` },
+            "de_DE": { "text": `Schichttausch angefordert: ${chosenShift} für ${colleague}` }
         },
         "icon": { "en_US": {"type":"font","char":""}, "de_DE": {"type":"font","char":""} },
         "image": {
             "en_US": {
                 "type":"image",
-                "href":"https://i.pinimg.com/474x/66/9b/d7/669bd7e734f2e0615d94fb1af77cc6aa.jpg",
+                // Updated to a generic Ford/Industrial image placeholder
+                "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg",
                 "width":600,"height":400
             },
             "de_DE": {
                 "type":"image",
-                "href":"https://i.pinimg.com/474x/66/9b/d7/669bd7e734f2e0615d94fb1af77cc6aa.jpg",
+                "href":"https://media.ford.com/content/fordmedia/fna/us/en/news/2021/09/27/ford-rouge-electric-vehicle-center-production/_jcr_content/image.img.881.495.jpg/1632743606869.jpg",
                 "width":600,"height":400
             }
         },
+        // Link to Ford/Staffbase scheduling page
         "link":"https://app.staffbase.com/content/page/6914e3ecd5cde774c74364f1"
     };
 
@@ -275,18 +387,24 @@ async function sendSwapRequest() {
         const res = await fetch("https://app.staffbase.com/api/branch/notifications", {
             method: "POST",
             headers: {
+                // NOTE: This Auth token from your example may expire. 
+                // Ensure this is generated dynamically in production.
                 "Authorization":"Basic NjkzMWUzM2EyYWU0NGMxZWE4ZTI4NTY2OkMqTnQ2YSRJNWF5RzF0dkR1a0hFdW0hbGFEMTRsZk1+S185ITcxQ09jV1Jsb3ctJmpDczMrKmFveXdRSikyLXU=",
                 "Content-Type":"application/json"
             },
             body: JSON.stringify(payload)
         });
 
-        alert(res.ok ? "Shift swap request sent!" : "Error sending request");
-    } catch {
-        alert("Network error");
+        if (res.ok) {
+            alert(`Request sent to ${colleague} successfully.`);
+            closeSwapModal();
+        } else {
+            alert("Error sending request. Please check your connection.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Network error occurred.");
     }
-
-    closeSwapModal();
 }
 </script>
 
