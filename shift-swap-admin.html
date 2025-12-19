@@ -369,13 +369,13 @@ function showToast(message, type = 'success') {
 // MOCK NOTIFICATION SENDER (Original Payload Structure)
 async function sendNotification(messageText, titleText) {
     const payload = {
-        "accessorIds": ["692f4f89c355107da4929d3b"], 
+        // TARGET: Patrick (Employee)
+        "accessorIds": ["692f4f895645392f2317a142"], 
         "channels": ["notificationCenter", "push"],
         "content": {
             "en_US": { "text": messageText },
             "de_DE": { "text": messageText }
         },
-        // Reverted to your original root-level structure
         "image": {
             "en_US": { 
                 "type": "image", 
@@ -411,4 +411,4 @@ async function sendNotification(messageText, titleText) {
 </script>
 
 </body>
-</html>ƒacc
+</html>
