@@ -274,7 +274,6 @@
     }
 
     /* TOAST NOTIFICATION - FIXED POSITION */
-    /* Changed position to 'fixed' so it floats over the screen regardless of scrolling */
     #toast {
         visibility: hidden;
         min-width: 250px;
@@ -484,7 +483,8 @@ async function sendSwapRequest() {
     showToast(`Request sent to ${colleague}`);
 
     const payload = {
-        "accessorIds": ["692f4f895645392f2317a142"], 
+        // TARGET: Nicole (Manager)
+        "accessorIds": ["692f4f89c355107da4929d3b"], 
         "channels": ["notificationCenter", "push"],
         "content": {
             "en_US": { "text": `Shift Swap Request: ${chosenShiftName} offered to ${colleague}` },
