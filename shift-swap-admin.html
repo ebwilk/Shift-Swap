@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manager - Team Shifts</title>
+
+<style>
+    /* GLOBAL RESET & FONTS */
+    * { box-sizing: border-box; }
+
+    body {
+        font-family: "Ford Antenna", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f0f2f5;
+        padding: 20px;
+        margin: 0;
+        min-height: 100vh;
+    }
+
+    /* WIDGET CONTAINER */
+    .widget {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-top: 6px solid #003478; /* Ford Trustmark Blue */
+        overflow: visible; 
+    }
+
+    h2 {
+        margin: 0 0 4px 0;
+        text-align: center;
+        color: #003478;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .date-range {
+        text-align: center;
+        font-weight: 500;
+        margin-bottom: 12px;
+        color: #555;
+        font-size: 14px;
+    }
+
+    /* NAV & WEEK DAYS */
+    .nav-arrows {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 18px;
+        padding: 0 8px;
+        color: #003478;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .week-days {
+        display: flex;
+        justify-content: space-between;
+        gap: 4px;
+        margin-bottom: 16px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .week-days div {
+        flex: 1;
+        text-align: center;
+        padding: 8px 0;
+        border-radius: 4px;
+        background: #f9f9f9;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .week-days .active {
+        background: #003478;
+        color: white;
+        font-weight: 600;
+    }
+
+    .summary {
+        display: flex;
+        justify-content: space-around;
+        background: #eef4ff;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #003478;
+        border: 1px solid #dae7ff;
+    }
+
+    .day-label {
+        margin-top: 12px;
+        margin-bottom: 6px;
+        font-weight: 700;
+        color: #333;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* SHIFT CARD STYLING */
+    .shift-card {
+        background: white;
+        padding: 14px;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        border-left: 5px solid #ccc; /* Default gray for normal shifts */
+        margin-bottom: 12px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    /* Specific Border Colors for Context */
+    .shift-card.active-shift { border-left-color: #003478; } 
+    .shift-card.request-state { border-left-color: #fca311; background-color: #fffdf5; } 
+    .shift-card.approved-state { border-left-color: #2e7d32; background-color: #f6fff6; } 
+
+    .shift-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 6px;
+    }
+
+    .employee-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111;
+    }
+
+    .shift-time {
+        font-size: 13px;
+        color: #555;
+        font-weight: 600;
+    }
+
+    /* BADGE */
+    .badge {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        padding: 3px 6px;
+        border-radius: 12px;
+        background: #eee;
+        color: #555;
+    }
+    .badge.pending { background: #fca311; color: #000; }
+    .badge.approved { background: #2e7d32; color: #fff; }
+
+    .shift-role {
+        font-size: 14px;
+        font-weight: 600;
+        color: #003478;
+        margin-bottom: 4px;
+    }
+
+    .shift-location {
+        font-size: 13px;
+        color: #555;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* PROPOSED SWAP SECTION */
+    .swap-proposal {
+        margin-top: 10px;
+        padding: 10px;
+        background: rgba(255,255,255,0.6);
+        border: 1px dashed #999;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+    
+    .swap-proposal strong { color: #003478; }
+
+    /* ACTION BUTTONS */
+    .actions-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+
+    .btn-approve {
+        background: #003478;
+        color: white;
+    }
+    .btn-approve:hover { background: #002a61; }
+
+    .btn-reject {
+        background: white;
+        color: #d32f2f;
+        border: 1px solid #d32f2f;
+    }
+    .btn-reject:hover { background: #fee; }
+
+    /* Hide buttons when not in request state */
+    .shift-card:not(.request-state) .actions-row { display: none; }
+    .shift-card:not(.request-state) .swap-proposal { display: none; }
+
+    /* TOAST */
+    #toast {
+        visibility: hidden;
+        min-width: 250px;
+        background-color: #2e7d32;
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        padding: 16px;
+        position: fixed;
+        left: 50%;
+        bottom: 30px;
+        transform: translateX(-50%);
+        z-index: 9999;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        font-size: 15px;
+        font-weight: 600;
+        opacity: 0;
+        transition: opacity 0.5s, bottom 0.5s;
+    }
+    
+    #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+    #toast.error { background-color: #d32f2f; }
+
+</style>
+</head>
+
+<body>
+
+<div class="widget">
+
+    <h2>Team Schedule</h2>
+    <div class="date-range">Nov 24 – Nov 30, 2025</div>
+
+    <div class="nav-arrows">
+        <span>&lsaquo; Prev</span>
+        <span>Next &rsaquo;</span>
+    </div>
+
+    <div class="week-days">
+        <div>Mo<br>24</div>
+        <div class="active">Tu<br>25</div>
+        <div>We<br>26</div>
+        <div>Th<br>27</div>
+        <div>Fr<br>28</div>
+        <div>Sa<br>29</div>
+        <div>Su<br>30</div>
+    </div>
+
+    <div class="summary">
+        <span>Team: A Crew</span>
+        <span>Requests: 1 Pending</span>
+    </div>
+
+    <div class="day-label">Tue, Nov 25</div>
+    
+    <div class="shift-card active-shift">
+        <div class="shift-header">
+            <div class="employee-name">J. Miller</div>
+            <div class="shift-time">06:00 – 16:30</div>
+        </div>
+        <div class="shift-role">Trim Assembly - Station 14</div>
+        <div class="shift-location">📍 Zone C, Dearborn Truck Plant</div>
+    </div>
+
+    <div class="shift-card request-state" id="card-swap-1">
+        <div class="shift-header">
+            <div class="employee-name">K. Davis</div>
+            <span class="badge pending" id="badge-1">Action Required</span>
+        </div>
+        <div class="shift-role">Chassis Marriage - Line 2</div>
+        <div class="shift-location">📍 Zone B, Dearborn Truck Plant</div>
+
+        <div class="swap-proposal">
+            🔄 <strong>Swap Requested:</strong><br>
+            K. Davis wants to swap with <strong>R. Sanchez</strong> (Floater).
+        </div>
+
+        <div class="actions-row">
+            <button class="action-btn btn-reject" onclick="handleDecision('card-swap-1', 'rejected')">Reject</button>
+            <button class="action-btn btn-approve" onclick="handleDecision('card-swap-1', 'approved')">Approve Swap</button>
+        </div>
+    </div>
+
+    <div class="day-label">Wed, Nov 26</div>
+
+    <div class="shift-card active-shift">
+        <div class="shift-header">
+            <div class="employee-name">R. Sanchez</div>
+            <div class="shift-time">06:00 – 16:30</div>
+        </div>
+        <div class="shift-role">Floater / Relief</div>
+        <div class="shift-location">📍 Various Zones</div>
+    </div>
+
+</div>
+
+<div id="toast">Action Saved</div>
+
+<script>
+async function handleDecision(cardId, decision) {
+    const card = document.getElementById(cardId);
+    const badge = document.getElementById("badge-1");
+
+    if (decision === 'approved') {
+        // Visual Update for Approval
+        card.classList.remove("request-state");
+        card.classList.add("approved-state");
+        
+        // Update Content to reflect the new reality
+        badge.className = "badge approved";
+        badge.innerText = "Swap Finalized";
+        
+        // Change the employee name to the new person
+        const nameDiv = card.querySelector(".employee-name");
+        nameDiv.innerText = "R. Sanchez"; // The person who took the shift
+        
+        showToast("Swap Approved & Schedule Updated");
+        
+        // Send Notification to original employee
+        await sendNotification("Your shift swap with R. Sanchez was Approved!", "Swap Approved");
+        
+    } else {
+        // Visual Update for Rejection
+        card.classList.remove("request-state");
+        card.classList.add("active-shift"); // Revert to normal
+        
+        badge.style.display = 'none'; // Hide badge
+        
+        showToast("Request Rejected", "error");
+
+        // Send Notification
+        await sendNotification("Your shift swap request was declined.", "Swap Declined");
+    }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById("toast");
+    toast.innerText = message;
+    toast.className = "show";
+    if(type === 'error') toast.classList.add("error");
+    
+    setTimeout(function(){ 
+        toast.className = toast.className.replace("show", ""); 
+        // Remove error class after hiding
+        setTimeout(() => toast.classList.remove("error"), 500);
+    }, 3000);
+}
+
+// MOCK NOTIFICATION SENDER (Original Payload Structure)
+async function sendNotification(messageText, titleText) {
+    const payload = {
+        "accessorIds": ["692f4f89c355107da4929d3b"], 
+        "channels": ["notificationCenter", "push"],
+        "content": {
+            "en_US": { "text": messageText },
+            "de_DE": { "text": messageText }
+        },
+        // Reverted to your original root-level structure
+        "image": {
+            "en_US": { 
+                "type": "image", 
+                "href": "https://raw.githubusercontent.com/ebwilk/Shift-Swap/refs/heads/main/Ford_logo_flat.svg.png", 
+                "width": 600,
+                "height": 400 
+            },
+            "de_DE": { 
+                "type": "image", 
+                "href": "https://raw.githubusercontent.com/ebwilk/Shift-Swap/refs/heads/main/Ford_logo_flat.svg.png", 
+                "width": 600,
+                "height": 400 
+            }
+        },
+        "link": "https://app.staffbase.com/content/page/6914e3ecd5cde774c74364f1"
+    };
+
+    console.log("Sending Notification Payload:", payload);
+
+    try {
+        await fetch("https://app.staffbase.com/api/branch/notifications", {
+            method: "POST",
+            headers: {
+                "Authorization":"Basic NjkzMWUzM2EyYWU0NGMxZWE4ZTI4NTY2OkMqTnQ2YSRJNWF5RzF0dkR1a0hFdW0hbGFEMTRsZk1+S185ITcxQ09jV1Jsb3ctJmpDczMrKmFveXdRSikyLXU=",
+                "Content-Type":"application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+    } catch (e) {
+        console.error("Mock API error:", e);
+    }
+}
+</script>
+
+</body>
+</html>ƒacc
